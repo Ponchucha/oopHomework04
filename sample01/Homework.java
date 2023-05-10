@@ -1,6 +1,7 @@
 package ru.geekbrains.sample01;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -23,35 +24,83 @@ import java.util.Random;
  */
 public class Homework {
     public static void main(String[] args) {
-        ArrayList<Apple> arr = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            arr.add(i, new Apple());
-            
-        }
-        Box<Apple> box = new Box(arr);
-        System.out.println(box.getWeight());
-        box.<Apple>addFruitsToArray();
-        // Box <Apple> boxWithApples01 = new Box<Apple>(new ArrayList<Apple>());
-        // boxWithApples01.addFruitsToArray();
-        // Box <Apple> boxWithApples02 = new Box(new ArrayList<Apple>());
-        // boxWithApples02.addFruitsToArray();
-        // Box <Apple> boxWithApples03 = new Box(new ArrayList<Apple>());
-        // boxWithApples03.addFruitsToArray();
-        // Box<Orange> boxWithOranges01 = new Box(new ArrayList<Orange>());
-        // boxWithOranges01.addFruitsToArray();
-        // Box<Orange> boxWithOranges02 = new Box(new ArrayList<Orange>());
-        // boxWithOranges02.addFruitsToArray();
-        // Box<Orange> boxWithOranges03 = new Box(new ArrayList<Orange>());
-        // boxWithOranges03.addFruitsToArray();
-        // Box<Orange> boxWithOranges04 = new Box(new ArrayList<Orange>());
-        // boxWithOranges04.addFruitsToArray();
+        Box<Fruit> randomBox01 = new Box(createRandomFriutArray()); // чтобы был какой-то смысл в этих всех проверках, сделала изначальные коробки со смешанным содержимым
+        //System.out.println(randomBox01.toString());  
+        Box<Fruit> randomBox02 = new Box(createRandomFriutArray()); 
+        Box<Fruit> randomBox03 = new Box(createRandomFriutArray());
         
+        Box<Apple> appleBox01 = new Box(createAppleArray());
+        //System.out.println(appleBox01.toString());
+        Box<Apple> appleBox02 = new Box(new ArrayList<Apple>(Arrays.asList(new Apple(), new Apple(), new Apple())));
+        //System.out.println(appleBox02.toString());
+
+        Box<Orange> orangeBox01 = new Box(new ArrayList<Orange>(Arrays.asList(new Orange(), new Orange())));
+        //System.out.println(orangeBox01.toString());
+        Box<Orange> orangeBox02 = new Box(new ArrayList<Orange>());// пустая
+        //System.out.println(orangeBox02.toString());
+
+       System.out.println(appleBox02.compare(orangeBox01)); 
+       System.out.println(appleBox01.compare(orangeBox02)); // сравнивает. Не вижу смысла делать компаратор, здесь буллево значение, достаточно равернства
+
+        randomBox01.pourInto(appleBox02);// яблоки пересыпали, апельсины оставили
+        randomBox01.pourInto(orangeBox01);//теперь randomBox01 - пустая
+        randomBox02.pourInto(randomBox01);//пересыпется только тот тип фруктов, который попал в коробку первым
+        randomBox03.pourInto(orangeBox02);// в пустую коробку для апельсинов пересыпятся только апельсины
+        appleBox01.pourInto(orangeBox01);//яблоки в апельсины не пересыпятся
+        orangeBox01.getContainment().clear();//а если она будет пуста
+        appleBox01.pourInto(orangeBox01);// почему-то пересыпается... Но выходит, что яблоки стали апельсинами?
+        // Поясню: я пыталась использовать try/catch, чтобы обработать это исключение, но ошибки не возникло, компилятор съел этот фокус
+        orangeBox01.pourInto(orangeBox02);//хоть яблоки и сошли за апельсины на предыдущем шаге, здесь они работают, как яблоки
+        /*условию задачи это вроде бы не противоречит, но в перспективе может вызвать проблемы
+        я не придумала способа сравнить тип коробки с типом содержимого. Буду благодарна за совет
+        getclass для всех коробок возвращает Box, а содержимое можно проверить, только если коробка не пуста.
+    System.out.println(appleBox01.getClass().equals(appleBox02.getClass()));
+    System.out.println(appleBox01.getClass().equals(orangeBox02.getClass()));
+        */
+
+        appleBox01.getContainment().clear();
+        appleBox01.addFruits(new ArrayList<Orange>(Arrays.asList(new Orange(), new Orange()))); // вот и в коробку из-под яблок апельсины складываются, если она пустая
+        appleBox02.addFruits(new ArrayList<Orange>(Arrays.asList(new Orange(), new Orange()))); // но если в ней что-то уже есть, то отсев работает
     }
+
+    static ArrayList<Fruit> createRandomFriutArray (){
+        Random rand = new Random();
+        ArrayList<Fruit> array  = new ArrayList<>();
+        for (int i = 0; i < rand.nextInt(3,5); i++) {
+            if(rand.nextInt(2) == 0){
+            array.add(i, new Apple());  
+            }
+            else{
+                array.add(i, new Orange());
+            }        
+        }
+        return array;  
+    }
+
+    static ArrayList<Apple> createAppleArray (){
+        Random rand = new Random();
+        ArrayList<Apple> array  = new ArrayList<>();
+        for (int i = 0; i < rand.nextInt(3,5); i++) {
+            array.add(i, new Apple());  
+            }
+        return array;  
+    }
+
+    static ArrayList<Orange> createOrangeAArray (){ // тут два одинаковых метода, различающихся только типом передаваемых и возвращаемых данных
+        Random rand = new Random();                 // можно ли как-то передать тип, в качестве переменной? Или это опять создание экземпляров, 
+        ArrayList<Orange> array  = new ArrayList<>(); //и в обобщённом методе так делать нельзя?
+        for (int i = 0; i < rand.nextInt(3,5); i++) { //просто нарушается принцип dry
+            array.add(i, new Orange());  
+            }
+        return array;  
+    }
+
+
 }
 
 abstract class Fruit{
 
-    private final float weight;
+    protected final float weight;
 
     public float getWeight() {
         return weight;
@@ -59,6 +108,11 @@ abstract class Fruit{
 
     public Fruit(float weight) {
         this.weight = weight;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Фрукт, весом %.2f кг", this.weight);
     }
 }
 
@@ -70,7 +124,7 @@ class Apple extends Fruit{
 
     @Override
     public String toString() {
-        return String.format("Яблоко, весом %f", this.getWeight());
+        return String.format("Яблоко, весом %.2f", this.weight);
     }
 }
 
@@ -81,7 +135,7 @@ class Orange extends Fruit{
 
     @Override
     public String toString() {
-        return String.format("Апельсин, весом %f", this.getWeight());
+        return String.format("Апельсин, весом %.2f", this.weight);
     }
 }
 
@@ -93,15 +147,9 @@ class Box <T extends Fruit>{
         this.fruits = fruits;
     }
 
-    public addFruitsToArray(){
-        Random rand = new Random();
-        int amount = rand.nextInt(3,12);
-        for (int i = 0; i < amount; i++) {
-            this.fruits.add(new T());
-        }
-        System.out.println(this.fruits.get(0).toString() + amount + "штук");
+    public ArrayList<T> getContainment(){
+        return fruits;
     }
-
 
     public double getWeight(){
         double weight = 0;
@@ -111,22 +159,71 @@ class Box <T extends Fruit>{
         return weight;
     }
 
-    public int howMany(){
+    public <newT extends Fruit> void addFruits(ArrayList <newT> arr){
         int count = 0;
-        for (T fruit : fruits) {
-            count++;
+        for (newT fruit : arr) {            
+            if(fruits.isEmpty() || fruit.getClass().equals(fruits.get(0).getClass())){
+                fruits.add((T)fruit);
+                count ++;
+            }            
         }
-        return count;
+        if (count == 0){
+            System.out.println("В этой коробке уже лежат фрукты другого типа");
+        }
+        else{
+            System.out.println("В коробку добавлено " + count + " фруктов");
+            System.out.println("Теперь там вот что: \n" + this.fruits.toString());
+            System.out.println("\n");
+        }
+    }
+
+    public int howMany(){
+        return fruits.size();
+    }
+
+    @Override
+    public String toString() {
+        if(this.fruits.isEmpty()){
+            return "Коробка пуста, вес равен 0";
+        }
+        else{
+            String result = "Вес коробки "+ String.format("%.2f", this.getWeight()) +" кг, содержимое: ";
+            for (T fruit : fruits) {
+                result += " | " + fruit.toString();
+            }
+            result += " |";
+            return result;
+        }
     }
 
     public boolean compare(Box anotherBox){
         return (this.getWeight() == anotherBox.getWeight());
     }
 
-    public double pourInto(Box<T> anotherBox){
-        return this.getWeight() + anotherBox.getWeight();
-
+    public <anotherT extends Fruit> void pourInto(Box<anotherT> anotherBox){
+        System.out.println("Первая коробка: " + this.toString());
+        System.out.println("Вторая коробка: " + anotherBox.toString());
+        int count = 0;
+        if(! this.fruits.isEmpty()){
+            if(anotherBox.getContainment().isEmpty()){
+                anotherBox.getContainment().add((anotherT)this.fruits.remove(0));
+                count = 1;
+            }     
+            for (int i = 0; i < this.getContainment().size(); i++) {                
+                if(anotherBox.getContainment().get(0).getClass().equals(this.fruits.get(i).getClass())){//если класс нулевого элемента совпадает с добавляемым
+                    anotherBox.getContainment().add((anotherT)this.fruits.remove(i));
+                    i--;
+                    count++;
+                }
+            }            
+            System.out.println("Пересыпали " + count + " фруктов во вторую коробку. \nТеперь там вот что:\n" + anotherBox.toString());
+            System.out.println("А в первой коробке осталось " + this.fruits.size() + " фруктов:\n" + this.toString());
+        }
+        else {
+            System.out.println("Нечего пересыпать.");
+        }
+        System.out.println("\n");
+        
     }
-
 }
 
